@@ -1,0 +1,2348 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.6.1
+-- Dumped by pg_dump version 9.6.1
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: newid(); Type: FUNCTION; Schema: public; Owner: cuba
+--
+
+CREATE FUNCTION newid() RETURNS uuid
+    LANGUAGE sql
+    AS $$select md5(random()::text || clock_timestamp()::text)::uuid$$;
+
+
+ALTER FUNCTION public.newid() OWNER TO cuba;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: sales_customer; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sales_customer (
+    id uuid NOT NULL,
+    version integer NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    name character varying(100) NOT NULL,
+    email character varying(100)
+);
+
+
+ALTER TABLE sales_customer OWNER TO cuba;
+
+--
+-- Name: sales_order; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sales_order (
+    id uuid NOT NULL,
+    version integer NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    date_ timestamp without time zone NOT NULL,
+    amount numeric(19,2),
+    customer_id uuid
+);
+
+
+ALTER TABLE sales_order OWNER TO cuba;
+
+--
+-- Name: sales_order_line; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sales_order_line (
+    id uuid NOT NULL,
+    version integer NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    product_id uuid NOT NULL,
+    quantity numeric(19,3) NOT NULL,
+    order_id uuid
+);
+
+
+ALTER TABLE sales_order_line OWNER TO cuba;
+
+--
+-- Name: sales_product; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sales_product (
+    id uuid NOT NULL,
+    version integer NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    name character varying(50) NOT NULL,
+    price numeric(19,2) NOT NULL
+);
+
+
+ALTER TABLE sales_product OWNER TO cuba;
+
+--
+-- Name: sec_constraint; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_constraint (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    code character varying(255),
+    check_type character varying(50) DEFAULT 'db'::character varying,
+    operation_type character varying(50) DEFAULT 'read'::character varying,
+    entity_name character varying(255) NOT NULL,
+    join_clause character varying(500),
+    where_clause character varying(1000),
+    groovy_script character varying(1000),
+    filter_xml character varying(1000),
+    is_active boolean DEFAULT true,
+    group_id uuid
+);
+
+
+ALTER TABLE sec_constraint OWNER TO cuba;
+
+--
+-- Name: sec_entity_log; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_entity_log (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    event_ts timestamp without time zone,
+    user_id uuid,
+    change_type character(1),
+    entity character varying(100),
+    entity_id uuid,
+    changes text
+);
+
+
+ALTER TABLE sec_entity_log OWNER TO cuba;
+
+--
+-- Name: sec_entity_log_attr; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_entity_log_attr (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    item_id uuid,
+    name character varying(50),
+    value character varying(1500),
+    value_id uuid,
+    messages_pack character varying(200)
+);
+
+
+ALTER TABLE sec_entity_log_attr OWNER TO cuba;
+
+--
+-- Name: sec_filter; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_filter (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    component character varying(200),
+    name character varying(255),
+    code character varying(200),
+    xml text,
+    user_id uuid
+);
+
+
+ALTER TABLE sec_filter OWNER TO cuba;
+
+--
+-- Name: sec_group; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_group (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    name character varying(255) NOT NULL,
+    parent_id uuid
+);
+
+
+ALTER TABLE sec_group OWNER TO cuba;
+
+--
+-- Name: sec_group_hierarchy; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_group_hierarchy (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    group_id uuid,
+    parent_id uuid,
+    hierarchy_level integer
+);
+
+
+ALTER TABLE sec_group_hierarchy OWNER TO cuba;
+
+--
+-- Name: sec_logged_attr; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_logged_attr (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    entity_id uuid,
+    name character varying(50)
+);
+
+
+ALTER TABLE sec_logged_attr OWNER TO cuba;
+
+--
+-- Name: sec_logged_entity; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_logged_entity (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    name character varying(100),
+    auto boolean,
+    manual boolean
+);
+
+
+ALTER TABLE sec_logged_entity OWNER TO cuba;
+
+--
+-- Name: sec_permission; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_permission (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    permission_type integer,
+    target character varying(100),
+    value integer,
+    role_id uuid
+);
+
+
+ALTER TABLE sec_permission OWNER TO cuba;
+
+--
+-- Name: sec_presentation; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_presentation (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    component character varying(200),
+    name character varying(255),
+    xml character varying(7000),
+    user_id uuid,
+    is_auto_save boolean
+);
+
+
+ALTER TABLE sec_presentation OWNER TO cuba;
+
+--
+-- Name: sec_remember_me; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_remember_me (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    user_id uuid NOT NULL,
+    token character varying(32) NOT NULL
+);
+
+
+ALTER TABLE sec_remember_me OWNER TO cuba;
+
+--
+-- Name: sec_role; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_role (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    name character varying(255) NOT NULL,
+    loc_name character varying(255),
+    description character varying(1000),
+    is_default_role boolean,
+    role_type integer
+);
+
+
+ALTER TABLE sec_role OWNER TO cuba;
+
+--
+-- Name: sec_screen_history; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_screen_history (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    user_id uuid,
+    caption character varying(255),
+    url text,
+    entity_id uuid,
+    substituted_user_id uuid
+);
+
+
+ALTER TABLE sec_screen_history OWNER TO cuba;
+
+--
+-- Name: sec_search_folder; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_search_folder (
+    folder_id uuid NOT NULL,
+    filter_component character varying(200),
+    filter_xml character varying(7000),
+    user_id uuid,
+    presentation_id uuid,
+    apply_default boolean,
+    is_set boolean,
+    entity_type character varying(50)
+);
+
+
+ALTER TABLE sec_search_folder OWNER TO cuba;
+
+--
+-- Name: sec_session_attr; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_session_attr (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    name character varying(50),
+    str_value character varying(1000),
+    datatype character varying(20),
+    group_id uuid
+);
+
+
+ALTER TABLE sec_session_attr OWNER TO cuba;
+
+--
+-- Name: sec_user; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_user (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    login character varying(50) NOT NULL,
+    login_lc character varying(50) NOT NULL,
+    password character varying(255),
+    name character varying(255),
+    first_name character varying(255),
+    last_name character varying(255),
+    middle_name character varying(255),
+    position_ character varying(255),
+    email character varying(100),
+    language_ character varying(20),
+    time_zone character varying(50),
+    time_zone_auto boolean,
+    active boolean,
+    group_id uuid NOT NULL,
+    ip_mask character varying(200),
+    change_password_at_logon boolean
+);
+
+
+ALTER TABLE sec_user OWNER TO cuba;
+
+--
+-- Name: sec_user_role; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_user_role (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    user_id uuid,
+    role_id uuid
+);
+
+
+ALTER TABLE sec_user_role OWNER TO cuba;
+
+--
+-- Name: sec_user_setting; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_user_setting (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    user_id uuid,
+    client_type character(1),
+    name character varying(255),
+    value text
+);
+
+
+ALTER TABLE sec_user_setting OWNER TO cuba;
+
+--
+-- Name: sec_user_substitution; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sec_user_substitution (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    user_id uuid NOT NULL,
+    substituted_user_id uuid NOT NULL,
+    start_date timestamp without time zone,
+    end_date timestamp without time zone
+);
+
+
+ALTER TABLE sec_user_substitution OWNER TO cuba;
+
+--
+-- Name: sys_app_folder; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_app_folder (
+    folder_id uuid NOT NULL,
+    filter_component character varying(200),
+    filter_xml character varying(7000),
+    visibility_script text,
+    quantity_script text,
+    apply_default boolean
+);
+
+
+ALTER TABLE sys_app_folder OWNER TO cuba;
+
+--
+-- Name: sys_attr_value; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_attr_value (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    category_attr_id uuid NOT NULL,
+    code character varying(100),
+    entity_id uuid,
+    string_value character varying,
+    integer_value integer,
+    double_value numeric,
+    date_value timestamp without time zone,
+    boolean_value boolean,
+    entity_value uuid
+);
+
+
+ALTER TABLE sys_attr_value OWNER TO cuba;
+
+--
+-- Name: sys_category; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_category (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    name character varying(255) NOT NULL,
+    special character varying(50),
+    entity_type character varying(30) NOT NULL,
+    is_default boolean,
+    discriminator integer
+);
+
+
+ALTER TABLE sys_category OWNER TO cuba;
+
+--
+-- Name: sys_category_attr; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_category_attr (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    category_entity_type character varying(4000),
+    name character varying(255),
+    code character varying(100) NOT NULL,
+    category_id uuid NOT NULL,
+    entity_class character varying(500),
+    data_type character varying(200),
+    default_string character varying,
+    default_int integer,
+    default_double numeric,
+    default_date timestamp without time zone,
+    default_date_is_current boolean,
+    default_boolean boolean,
+    default_entity_value uuid,
+    enumeration character varying(500),
+    order_no integer,
+    screen character varying(255),
+    required boolean,
+    lookup boolean,
+    target_screens character varying(4000),
+    width character varying(20),
+    rows_count integer
+);
+
+
+ALTER TABLE sys_category_attr OWNER TO cuba;
+
+--
+-- Name: sys_config; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_config (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    name character varying(255),
+    value text
+);
+
+
+ALTER TABLE sys_config OWNER TO cuba;
+
+--
+-- Name: sys_db_changelog; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_db_changelog (
+    script_name character varying(300) NOT NULL,
+    create_ts timestamp without time zone DEFAULT now(),
+    is_init integer DEFAULT 0
+);
+
+
+ALTER TABLE sys_db_changelog OWNER TO cuba;
+
+--
+-- Name: sys_entity_snapshot; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_entity_snapshot (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    entity_meta_class character varying(50) NOT NULL,
+    entity_id uuid NOT NULL,
+    author_id uuid NOT NULL,
+    view_xml text NOT NULL,
+    snapshot_xml text NOT NULL,
+    snapshot_date timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE sys_entity_snapshot OWNER TO cuba;
+
+--
+-- Name: sys_entity_statistics; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_entity_statistics (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    name character varying(50),
+    instance_count bigint,
+    fetch_ui integer,
+    max_fetch_ui integer,
+    lazy_collection_threshold integer,
+    lookup_screen_threshold integer
+);
+
+
+ALTER TABLE sys_entity_statistics OWNER TO cuba;
+
+--
+-- Name: sys_file; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_file (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    name character varying(500) NOT NULL,
+    ext character varying(20),
+    file_size bigint,
+    create_date timestamp without time zone
+);
+
+
+ALTER TABLE sys_file OWNER TO cuba;
+
+--
+-- Name: sys_folder; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_folder (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    folder_type character(1),
+    parent_id uuid,
+    name character varying(100),
+    tab_name character varying(100),
+    sort_order integer
+);
+
+
+ALTER TABLE sys_folder OWNER TO cuba;
+
+--
+-- Name: sys_fts_queue; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_fts_queue (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    entity_id uuid,
+    string_entity_id character varying(255),
+    int_entity_id integer,
+    long_entity_id bigint,
+    entity_name character varying(200),
+    change_type character(1),
+    source_host character varying(255),
+    indexing_host character varying(255),
+    fake boolean
+);
+
+
+ALTER TABLE sys_fts_queue OWNER TO cuba;
+
+--
+-- Name: sys_jmx_instance; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_jmx_instance (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    node_name character varying(255),
+    address character varying(500) NOT NULL,
+    login character varying(50) NOT NULL,
+    password character varying(255) NOT NULL
+);
+
+
+ALTER TABLE sys_jmx_instance OWNER TO cuba;
+
+--
+-- Name: sys_lock_config; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_lock_config (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    name character varying(100),
+    timeout_sec integer
+);
+
+
+ALTER TABLE sys_lock_config OWNER TO cuba;
+
+--
+-- Name: sys_query_result_seq; Type: SEQUENCE; Schema: public; Owner: cuba
+--
+
+CREATE SEQUENCE sys_query_result_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE sys_query_result_seq OWNER TO cuba;
+
+--
+-- Name: sys_query_result; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_query_result (
+    id bigint DEFAULT nextval('sys_query_result_seq'::regclass) NOT NULL,
+    session_id uuid NOT NULL,
+    query_key integer NOT NULL,
+    entity_id uuid,
+    string_entity_id character varying(255),
+    int_entity_id integer,
+    long_entity_id bigint
+);
+
+
+ALTER TABLE sys_query_result OWNER TO cuba;
+
+--
+-- Name: sys_scheduled_execution; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_scheduled_execution (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    task_id uuid,
+    server character varying(512),
+    start_time timestamp with time zone,
+    finish_time timestamp with time zone,
+    result text
+);
+
+
+ALTER TABLE sys_scheduled_execution OWNER TO cuba;
+
+--
+-- Name: sys_scheduled_task; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_scheduled_task (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    defined_by character varying(1) DEFAULT 'B'::character varying,
+    class_name character varying(500),
+    script_name character varying(500),
+    bean_name character varying(50),
+    method_name character varying(50),
+    method_params character varying(1000),
+    user_name character varying(50),
+    is_singleton boolean,
+    is_active boolean,
+    period integer,
+    timeout integer,
+    start_date timestamp without time zone,
+    time_frame integer,
+    start_delay integer,
+    permitted_servers character varying(4096),
+    log_start boolean,
+    log_finish boolean,
+    last_start_time timestamp with time zone,
+    last_start_server character varying(512),
+    description character varying(1000),
+    cron character varying(100),
+    scheduling_type character varying(1) DEFAULT 'P'::character varying
+);
+
+
+ALTER TABLE sys_scheduled_task OWNER TO cuba;
+
+--
+-- Name: sys_sending_attachment; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_sending_attachment (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    message_id uuid,
+    content bytea,
+    content_file_id uuid,
+    content_id character varying(50),
+    name character varying(500),
+    disposition character varying(50),
+    text_encoding character varying(50)
+);
+
+
+ALTER TABLE sys_sending_attachment OWNER TO cuba;
+
+--
+-- Name: sys_sending_message; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_sending_message (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    version integer,
+    update_ts timestamp with time zone,
+    updated_by character varying(50),
+    delete_ts timestamp without time zone,
+    deleted_by character varying(50),
+    address_to text,
+    address_from character varying(100),
+    caption character varying(500),
+    email_headers character varying(500),
+    content_text text,
+    content_text_file_id uuid,
+    deadline timestamp with time zone,
+    status integer,
+    date_sent timestamp without time zone,
+    attempts_count integer,
+    attempts_made integer,
+    attachments_name text
+);
+
+
+ALTER TABLE sys_sending_message OWNER TO cuba;
+
+--
+-- Name: sys_server; Type: TABLE; Schema: public; Owner: cuba
+--
+
+CREATE TABLE sys_server (
+    id uuid NOT NULL,
+    create_ts timestamp without time zone,
+    created_by character varying(50),
+    update_ts timestamp without time zone,
+    updated_by character varying(50),
+    name character varying(255),
+    is_running boolean,
+    data text
+);
+
+
+ALTER TABLE sys_server OWNER TO cuba;
+
+--
+-- Data for Name: sales_customer; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sales_customer (id, version, create_ts, created_by, update_ts, updated_by, delete_ts, deleted_by, name, email) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sales_order; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sales_order (id, version, create_ts, created_by, update_ts, updated_by, delete_ts, deleted_by, date_, amount, customer_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sales_order_line; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sales_order_line (id, version, create_ts, created_by, update_ts, updated_by, delete_ts, deleted_by, product_id, quantity, order_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sales_product; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sales_product (id, version, create_ts, created_by, update_ts, updated_by, delete_ts, deleted_by, name, price) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_constraint; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_constraint (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, code, check_type, operation_type, entity_name, join_clause, where_clause, groovy_script, filter_xml, is_active, group_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_entity_log; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_entity_log (id, create_ts, created_by, event_ts, user_id, change_type, entity, entity_id, changes) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_entity_log_attr; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_entity_log_attr (id, create_ts, created_by, item_id, name, value, value_id, messages_pack) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_filter; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_filter (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, component, name, code, xml, user_id) FROM stdin;
+b61d18cb-e79a-46f3-b16d-eaf4aebb10dd	2016-11-14 20:00:42.092169	admin	0	\N	\N	\N	\N	[sec$User.browse].genericFilter	Search by role	\N	<?xml version="1.0" encoding="UTF-8"?><filter><and><c name="UrMxpkfMGn" class="com.haulmont.cuba.security.entity.Role" type="CUSTOM" locCaption="Role" entityAlias="u" join="join u.userRoles ur">ur.role.id = :component$genericFilter.UrMxpkfMGn32565<param name="component$genericFilter.UrMxpkfMGn32565">NULL</param></c></and></filter>	60885987-1b61-4247-94c7-dff348347f93
+\.
+
+
+--
+-- Data for Name: sec_group; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_group (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, name, parent_id) FROM stdin;
+0fa2b1a5-1d68-4d69-9fbd-dff348347f93	2016-11-14 20:00:42.050449	\N	0	\N	\N	\N	\N	Company	\N
+\.
+
+
+--
+-- Data for Name: sec_group_hierarchy; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_group_hierarchy (id, create_ts, created_by, group_id, parent_id, hierarchy_level) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_logged_attr; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_logged_attr (id, create_ts, created_by, entity_id, name) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_logged_entity; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_logged_entity (id, create_ts, created_by, name, auto, manual) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_permission; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_permission (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, permission_type, target, value, role_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_presentation; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_presentation (id, create_ts, created_by, update_ts, updated_by, component, name, xml, user_id, is_auto_save) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_remember_me; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_remember_me (id, create_ts, created_by, version, user_id, token) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_role; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_role (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, name, loc_name, description, is_default_role, role_type) FROM stdin;
+0c018061-b26f-4de2-a5be-dff348347f93	2016-11-14 20:00:42.075396	\N	0	\N	\N	\N	\N	Administrators	\N	\N	\N	10
+\.
+
+
+--
+-- Data for Name: sec_screen_history; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_screen_history (id, create_ts, created_by, user_id, caption, url, entity_id, substituted_user_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_search_folder; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_search_folder (folder_id, filter_component, filter_xml, user_id, presentation_id, apply_default, is_set, entity_type) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_session_attr; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_session_attr (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, name, str_value, datatype, group_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_user; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_user (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, login, login_lc, password, name, first_name, last_name, middle_name, position_, email, language_, time_zone, time_zone_auto, active, group_id, ip_mask, change_password_at_logon) FROM stdin;
+60885987-1b61-4247-94c7-dff348347f93	2016-11-14 20:00:42.058946	\N	0	\N	\N	\N	\N	admin	admin	cc2229d1b8a052423d9e1c9ef0113b850086586a	Administrator	\N	\N	\N	\N	\N	\N	\N	\N	t	0fa2b1a5-1d68-4d69-9fbd-dff348347f93	\N	\N
+a405db59-e674-4f63-8afe-269dda788fe8	2016-11-14 20:00:42.06711	\N	0	\N	\N	\N	\N	anonymous	anonymous	\N	Anonymous	\N	\N	\N	\N	\N	\N	\N	\N	t	0fa2b1a5-1d68-4d69-9fbd-dff348347f93	\N	\N
+\.
+
+
+--
+-- Data for Name: sec_user_role; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_user_role (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, user_id, role_id) FROM stdin;
+c838be0a-96d0-4ef4-a7c0-dff348347f93	2016-11-14 20:00:42.083816	\N	0	\N	\N	\N	\N	60885987-1b61-4247-94c7-dff348347f93	0c018061-b26f-4de2-a5be-dff348347f93
+\.
+
+
+--
+-- Data for Name: sec_user_setting; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_user_setting (id, create_ts, created_by, user_id, client_type, name, value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sec_user_substitution; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sec_user_substitution (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, user_id, substituted_user_id, start_date, end_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_app_folder; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_app_folder (folder_id, filter_component, filter_xml, visibility_script, quantity_script, apply_default) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_attr_value; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_attr_value (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, category_attr_id, code, entity_id, string_value, integer_value, double_value, date_value, boolean_value, entity_value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_category; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_category (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, name, special, entity_type, is_default, discriminator) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_category_attr; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_category_attr (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, category_entity_type, name, code, category_id, entity_class, data_type, default_string, default_int, default_double, default_date, default_date_is_current, default_boolean, default_entity_value, enumeration, order_no, screen, required, lookup, target_screens, width, rows_count) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_config; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_config (id, create_ts, created_by, version, update_ts, updated_by, name, value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_db_changelog; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_db_changelog (script_name, create_ts, is_init) FROM stdin;
+10-cuba/init/postgres/create-db.sql	2016-11-14 20:00:42.103697	1
+50-sales/init/postgres/10.create-db.sql	2016-11-14 20:00:42.251273	1
+50-sales/init/postgres/20.create-db.sql	2016-11-14 20:00:42.409636	1
+10-cuba/update/postgres/01/01-010-addValueIdToEntityLog.sql	2016-11-14 20:00:42.433147	1
+10-cuba/update/postgres/01/01-020-dropDbUpdatePKey.sql	2016-11-14 20:00:42.442273	1
+10-cuba/update/postgres/01/01-030-add_EntityLogAttr_messagesPack.sql	2016-11-14 20:00:42.450618	1
+10-cuba/update/postgres/01/01-040-renameUserPosition.sql	2016-11-14 20:00:42.459085	1
+10-cuba/update/postgres/01/01-050-addUserLanguage.sql	2016-11-14 20:00:42.467397	1
+10-cuba/update/postgres/01/01-050-sysFtsQueue.sql	2016-11-14 20:00:42.475864	1
+10-cuba/update/postgres/01/01-055-createReportTables.sql	2016-11-14 20:00:42.483991	1
+10-cuba/update/postgres/01/01-060-addReportParameterPosition.sql	2016-11-14 20:00:42.49234	1
+10-cuba/update/postgres/01/01-070-addCodeInFolder.sql	2016-11-14 20:00:42.500667	1
+10-cuba/update/postgres/01/01-080-SessionAttributes.sql	2016-11-14 20:00:42.509067	1
+10-cuba/update/postgres/01/01-090-ChangeReportKeys.sql	2016-11-14 20:00:42.517419	1
+10-cuba/update/postgres/01/01-100-EntityStatistics.sql	2016-11-14 20:00:42.525604	1
+10-cuba/update/postgres/01/01-100-addPresentations.sql	2016-11-14 20:00:42.534662	1
+10-cuba/update/postgres/01/01-110-AddFieldInSysFolder.sql	2016-11-14 20:00:42.542346	1
+10-cuba/update/postgres/01/01-120-AddCodeFieldInSecFilter.sql	2016-11-14 20:00:42.550428	1
+10-cuba/update/postgres/01/01-130-createReportValueFormatTable.sql	2016-11-14 20:00:42.559151	1
+10-cuba/update/postgres/01/01-140-AddTabHistory.sql	2016-11-14 20:00:42.567489	1
+10-cuba/update/postgres/01/01-150-CreateIndexes.sql	2016-11-14 20:00:42.575884	1
+10-cuba/update/postgres/01/01-160-screenHistory.sql	2016-11-14 20:00:42.58395	1
+10-cuba/update/postgres/01/01-170-entityStatisticsFetchUI.sql	2016-11-14 20:00:42.592246	1
+10-cuba/update/postgres/01/01-180-changeAppFoldersScriptsLength.sql	2016-11-14 20:00:42.600528	1
+10-cuba/update/postgres/01/01-190-renameDoubleNameInSysFolder.sql	2016-11-14 20:00:42.60871	1
+10-cuba/update/postgres/01/01-200-deleteCodeInSysFolders.sql	2016-11-14 20:00:42.617418	1
+10-cuba/update/postgres/01/01-210-updateTabNameInSysFolder.sql	2016-11-14 20:00:42.625815	1
+10-cuba/update/postgres/01/01-220-reportTablesChangeColumns.sql	2016-11-14 20:00:42.633987	1
+10-cuba/update/postgres/01/01-230-reportParameterAddEnumClass.sql	2016-11-14 20:00:42.642021	1
+10-cuba/update/postgres/01/01-240-userIpMask.sql	2016-11-14 20:00:42.650519	1
+10-cuba/update/postgres/01/01-250-entityStatLookupScreenThreshold.sql	2016-11-14 20:00:42.658782	1
+10-cuba/update/postgres/01/01-260-reportTemplatesTable.sql	2016-11-14 20:00:42.667172	1
+10-cuba/update/postgres/01/01-270-sendingMessagesHistory.sql	2016-11-14 20:00:42.675696	1
+10-cuba/update/postgres/01/01-280-addApplyDefault.sql	2016-11-14 20:00:42.683834	1
+10-cuba/update/postgres/01/01-290-addIsSetToSearchFolder.sql	2016-11-14 20:00:42.692113	1
+10-cuba/update/postgres/01/01-300-addEntitySnapshotTable.sql	2016-11-14 20:00:42.700458	1
+10-cuba/update/postgres/01/01-310-RuntimePropertiesTables.sql	2016-11-14 20:00:42.708747	1
+10-cuba/update/postgres/01/01-320-RuntimePropertiesRework.sql	2016-11-14 20:00:42.717042	1
+10-cuba/update/postgres/01/01-330-CategoryAttrAlterType.sql	2016-11-14 20:00:42.725412	1
+10-cuba/update/postgres/01/01-340-CategoryDiscriminator.sql	2016-11-14 20:00:42.733625	1
+10-cuba/update/postgres/01/01-350-categoryAttrOrderNo.sql	2016-11-14 20:00:42.741948	1
+10-cuba/update/postgres/01/01-360-CategoryAttrScreen.sql	2016-11-14 20:00:42.750465	1
+10-cuba/update/postgres/01/01-370-CategoryAttrRequired.sql	2016-11-14 20:00:42.758503	1
+10-cuba/update/postgres/01/01-380-AlterTypeColumnUrlInScreenHistory.sql	2016-11-14 20:00:42.767265	1
+10-cuba/update/postgres/01/01-390-AlterTableSysCategoryAttr.sql	2016-11-14 20:00:42.775648	1
+10-cuba/update/postgres/01/01-400-AlterTableSysAttrValue.sql	2016-11-14 20:00:42.78397	1
+10-cuba/update/postgres/01/01-410-addDataSetParams.sql	2016-11-14 20:00:42.792234	1
+10-cuba/update/postgres/01/01-410-addStartDateToUserSubstitution.sql	2016-11-14 20:00:42.800661	1
+10-cuba/update/postgres/01/01-420-addEntityIdToScreenHistory.sql	2016-11-14 20:00:42.809061	1
+10-cuba/update/postgres/01/01-440-addDropdownToCategoryAttribute.sql	2016-11-14 20:00:42.817346	1
+10-cuba/update/postgres/01/01-450-alterSecConstraint.sql	2016-11-14 20:00:42.825614	1
+10-cuba/update/postgres/02/02-010-addScheduledTasks.sql	2016-11-14 20:00:42.83394	1
+10-cuba/update/postgres/02/02-020-alterDoubleValueColumnInSysAttrValueTable.sql	2016-11-14 20:00:42.842205	1
+10-cuba/update/postgres/02/02-030-addReportGroup.sql	2016-11-14 20:00:42.850577	1
+10-cuba/update/postgres/02/02-040-addReportRefToBand.sql	2016-11-14 20:00:42.858852	1
+10-cuba/update/postgres/02/02-050-reportLocales.sql	2016-11-14 20:00:42.867265	1
+10-cuba/update/postgres/02/02-060-reportCode.sql	2016-11-14 20:00:42.875504	1
+10-cuba/update/postgres/02/02-070-addRoleType.sql	2016-11-14 20:00:42.883498	1
+10-cuba/update/postgres/02/02-080-addSnapshotDate.sql	2016-11-14 20:00:42.891746	1
+10-cuba/update/postgres/02/02-090-schedulingDaylightSaving.sql	2016-11-14 20:00:42.900562	1
+10-cuba/update/postgres/02/02-100-entitySnapshotAuthor.sql	2016-11-14 20:00:42.908895	1
+10-cuba/update/postgres/02/02-110-addDefaultDateIsCurrent.sql	2016-11-14 20:00:42.917257	1
+10-cuba/update/postgres/02/02-120-addUserDescriminator.sql	2016-11-14 20:00:42.925607	1
+10-cuba/update/postgres/02/02-130-alterSecConstraint.sql	2016-11-14 20:00:42.93397	1
+10-cuba/update/postgres/02/02-130-queryResults.sql	2016-11-14 20:00:42.94229	1
+10-cuba/update/postgres/02/02-140-entityLogChanges.sql	2016-11-14 20:00:42.950536	1
+10-cuba/update/postgres/02/02-150-alterSysScheduledTask.sql	2016-11-14 20:00:42.958855	1
+10-cuba/update/postgres/12/121002-updateScreenPermissions.sql	2016-11-14 20:00:42.96721	1
+10-cuba/update/postgres/12/121003-addCodeToCategoryAttribute.sql	2016-11-14 20:00:42.975384	1
+10-cuba/update/postgres/12/121004-addFieldsToScheduledTasks.sql	2016-11-14 20:00:42.983854	1
+10-cuba/update/postgres/12/121020-addLoginConstraintsForUser.sql	2016-11-14 20:00:42.992147	1
+10-cuba/update/postgres/12/121024-addEncryptionParamsToUser.sql	2016-11-14 20:00:43.000517	1
+10-cuba/update/postgres/12/121031-dropPasswordColumnFromScheduledTask.sql	2016-11-14 20:00:43.008831	1
+10-cuba/update/postgres/12/121102-dropSaltColumn.sql	2016-11-14 20:00:43.017151	1
+10-cuba/update/postgres/12/121114-addDescriptionToScheduledTask.sql	2016-11-14 20:00:43.025325	1
+10-cuba/update/postgres/12/121228-addJmxInstance.sql	2016-11-14 20:00:43.03397	1
+10-cuba/update/postgres/13/130110-removeJmxInstanceDescription.sql	2016-11-14 20:00:43.042144	1
+10-cuba/update/postgres/13/130311-renameColumnsForOracle.sql	2016-11-14 20:00:43.05034	1
+10-cuba/update/postgres/13/130731-changeServerEntity.sql	2016-11-14 20:00:43.058788	1
+10-cuba/update/postgres/13/130918-email-attachment-options.sql	2016-11-14 20:00:43.067078	1
+10-cuba/update/postgres/13/130920-email-file-storage.sql	2016-11-14 20:00:43.075455	1
+10-cuba/update/postgres/13/130923-permissionsToRenamedScreens.sql	2016-11-14 20:00:43.083816	1
+10-cuba/update/postgres/13/131108-sending-message-timeshift.sql	2016-11-14 20:00:43.0921	1
+10-cuba/update/postgres/13/131112-scheduled-task-cron.sql	2016-11-14 20:00:43.100249	1
+10-cuba/update/postgres/14/140313-ftsQueueIndexingHost.sql	2016-11-14 20:00:43.108561	1
+10-cuba/update/postgres/14/140405-changeTypeForSysConfigValue.sql	2016-11-14 20:00:43.116831	1
+10-cuba/update/postgres/14/140708-addRememberMeTable.sql	2016-11-14 20:00:43.125132	1
+10-cuba/update/postgres/14/140716-changeSysFileSizeType.sql	2016-11-14 20:00:43.133514	1
+10-cuba/update/postgres/14/141203-setNotNullSysFileName.sql	2016-11-14 20:00:43.141857	1
+10-cuba/update/postgres/15/150203-sendingMessageEmailHeaders.sql	2016-11-14 20:00:43.150161	1
+10-cuba/update/postgres/15/150203-userTimeZone.sql	2016-11-14 20:00:43.158396	1
+10-cuba/update/postgres/15/150205-addSubstituteUserInScreenHistory.sql	2016-11-14 20:00:43.166857	1
+10-cuba/update/postgres/15/150226-addIndexInScreenHistory.sql	2016-11-14 20:00:43.175392	1
+10-cuba/update/postgres/15/150310-alterFilterXml.sql	2016-11-14 20:00:43.183728	1
+10-cuba/update/postgres/15/150417-runtimePropertiesChanges.sql	2016-11-14 20:00:43.192114	1
+10-cuba/update/postgres/15/150514-categoryEntityTypeInAttribute.sql	2016-11-14 20:00:43.200329	1
+10-cuba/update/postgres/15/150630-entityClassToCategoryAttribute.sql	2016-11-14 20:00:43.208705	1
+10-cuba/update/postgres/15/150805-fakeFtsQueue.sql	2016-11-14 20:00:43.217138	1
+10-cuba/update/postgres/15/151106-extendScheduledTaskFields.sql	2016-11-14 20:00:43.22548	1
+10-cuba/update/postgres/15/151116-rowLevelSecurity.sql	2016-11-14 20:00:43.233728	1
+10-cuba/update/postgres/15/151228-sendingMessagesExtendFields.sql	2016-11-14 20:00:43.242014	1
+10-cuba/update/postgres/15/1512282-addIsActiveToConstraint.sql	2016-11-14 20:00:43.250398	1
+10-cuba/update/postgres/16/160322-dropUniqSysScheduledTaskBeanMethodConstraint.sql	2016-11-14 20:00:43.258648	1
+10-cuba/update/postgres/16/160405-createUniqSysCategory.sql	2016-11-14 20:00:43.266814	1
+10-cuba/update/postgres/16/160420-createUpdateTsIndexOnSysSendingMessage.sql	2016-11-14 20:00:43.275305	1
+10-cuba/update/postgres/16/160616-addSizeCategoryAttribute.sql	2016-11-14 20:00:43.283608	1
+10-cuba/update/postgres/16/160626-createIndexOnFinishTimeScheduledExecution.sql	2016-11-14 20:00:43.291939	1
+10-cuba/update/postgres/16/160725-anonymousLogin.sql	2016-11-14 20:00:43.300195	1
+10-cuba/update/postgres/16/160916-addEntityIdToFtsQueue.sql	2016-11-14 20:00:43.308356	1
+10-cuba/update/postgres/16/270916-addEntityIdToQueryResult.sql	2016-11-14 20:00:43.316828	1
+\.
+
+
+--
+-- Data for Name: sys_entity_snapshot; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_entity_snapshot (id, create_ts, created_by, entity_meta_class, entity_id, author_id, view_xml, snapshot_xml, snapshot_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_entity_statistics; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_entity_statistics (id, create_ts, created_by, update_ts, updated_by, name, instance_count, fetch_ui, max_fetch_ui, lazy_collection_threshold, lookup_screen_threshold) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_file; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_file (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, name, ext, file_size, create_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_folder; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_folder (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, folder_type, parent_id, name, tab_name, sort_order) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_fts_queue; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_fts_queue (id, create_ts, created_by, entity_id, string_entity_id, int_entity_id, long_entity_id, entity_name, change_type, source_host, indexing_host, fake) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_jmx_instance; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_jmx_instance (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, node_name, address, login, password) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_lock_config; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_lock_config (id, create_ts, created_by, name, timeout_sec) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_query_result; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_query_result (id, session_id, query_key, entity_id, string_entity_id, int_entity_id, long_entity_id) FROM stdin;
+\.
+
+
+--
+-- Name: sys_query_result_seq; Type: SEQUENCE SET; Schema: public; Owner: cuba
+--
+
+SELECT pg_catalog.setval('sys_query_result_seq', 1, false);
+
+
+--
+-- Data for Name: sys_scheduled_execution; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_scheduled_execution (id, create_ts, created_by, task_id, server, start_time, finish_time, result) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_scheduled_task; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_scheduled_task (id, create_ts, created_by, update_ts, updated_by, delete_ts, deleted_by, defined_by, class_name, script_name, bean_name, method_name, method_params, user_name, is_singleton, is_active, period, timeout, start_date, time_frame, start_delay, permitted_servers, log_start, log_finish, last_start_time, last_start_server, description, cron, scheduling_type) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_sending_attachment; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_sending_attachment (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, message_id, content, content_file_id, content_id, name, disposition, text_encoding) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_sending_message; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_sending_message (id, create_ts, created_by, version, update_ts, updated_by, delete_ts, deleted_by, address_to, address_from, caption, email_headers, content_text, content_text_file_id, deadline, status, date_sent, attempts_count, attempts_made, attachments_name) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sys_server; Type: TABLE DATA; Schema: public; Owner: cuba
+--
+
+COPY sys_server (id, create_ts, created_by, update_ts, updated_by, name, is_running, data) FROM stdin;
+685637c7-0219-0bda-f025-9c5e2642084a	2016-11-14 20:01:25.819	\N	2016-11-14 20:36:25.822	\N	localhost:8080/app-core	t	\N
+\.
+
+
+--
+-- Name: sales_customer sales_customer_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sales_customer
+    ADD CONSTRAINT sales_customer_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sales_order_line sales_order_line_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sales_order_line
+    ADD CONSTRAINT sales_order_line_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sales_order sales_order_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sales_order
+    ADD CONSTRAINT sales_order_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sales_product sales_product_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sales_product
+    ADD CONSTRAINT sales_product_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_constraint sec_constraint_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_constraint
+    ADD CONSTRAINT sec_constraint_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_entity_log_attr sec_entity_log_attr_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_entity_log_attr
+    ADD CONSTRAINT sec_entity_log_attr_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_entity_log sec_entity_log_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_entity_log
+    ADD CONSTRAINT sec_entity_log_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_filter sec_filter_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_filter
+    ADD CONSTRAINT sec_filter_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_group_hierarchy sec_group_hierarchy_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_group_hierarchy
+    ADD CONSTRAINT sec_group_hierarchy_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_group sec_group_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_group
+    ADD CONSTRAINT sec_group_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_logged_attr sec_logged_attr_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_logged_attr
+    ADD CONSTRAINT sec_logged_attr_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_logged_attr sec_logged_attr_uniq_name; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_logged_attr
+    ADD CONSTRAINT sec_logged_attr_uniq_name UNIQUE (entity_id, name);
+
+
+--
+-- Name: sec_logged_entity sec_logged_entity_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_logged_entity
+    ADD CONSTRAINT sec_logged_entity_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_logged_entity sec_logged_entity_uniq_name; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_logged_entity
+    ADD CONSTRAINT sec_logged_entity_uniq_name UNIQUE (name);
+
+
+--
+-- Name: sec_permission sec_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_permission
+    ADD CONSTRAINT sec_permission_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_presentation sec_presentation_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_presentation
+    ADD CONSTRAINT sec_presentation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_remember_me sec_remember_me_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_remember_me
+    ADD CONSTRAINT sec_remember_me_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_role sec_role_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_role
+    ADD CONSTRAINT sec_role_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_screen_history sec_screen_history_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_screen_history
+    ADD CONSTRAINT sec_screen_history_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_search_folder sec_search_folder_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_search_folder
+    ADD CONSTRAINT sec_search_folder_pkey PRIMARY KEY (folder_id);
+
+
+--
+-- Name: sec_session_attr sec_session_attr_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_session_attr
+    ADD CONSTRAINT sec_session_attr_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_user sec_user_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user
+    ADD CONSTRAINT sec_user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_user_role sec_user_role_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_role
+    ADD CONSTRAINT sec_user_role_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_user_setting sec_user_setting_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_setting
+    ADD CONSTRAINT sec_user_setting_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sec_user_setting sec_user_setting_uniq; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_setting
+    ADD CONSTRAINT sec_user_setting_uniq UNIQUE (user_id, name, client_type);
+
+
+--
+-- Name: sec_user_substitution sec_user_substitution_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_substitution
+    ADD CONSTRAINT sec_user_substitution_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_app_folder sys_app_folder_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_app_folder
+    ADD CONSTRAINT sys_app_folder_pkey PRIMARY KEY (folder_id);
+
+
+--
+-- Name: sys_attr_value sys_attr_value_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_attr_value
+    ADD CONSTRAINT sys_attr_value_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_category_attr sys_category_attr_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_category_attr
+    ADD CONSTRAINT sys_category_attr_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_category sys_category_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_category
+    ADD CONSTRAINT sys_category_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_config sys_config_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_config
+    ADD CONSTRAINT sys_config_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_db_changelog sys_db_changelog_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_db_changelog
+    ADD CONSTRAINT sys_db_changelog_pkey PRIMARY KEY (script_name);
+
+
+--
+-- Name: sys_entity_snapshot sys_entity_snapshot_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_entity_snapshot
+    ADD CONSTRAINT sys_entity_snapshot_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_entity_statistics sys_entity_statistics_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_entity_statistics
+    ADD CONSTRAINT sys_entity_statistics_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_file sys_file_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_file
+    ADD CONSTRAINT sys_file_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_folder sys_folder_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_folder
+    ADD CONSTRAINT sys_folder_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_fts_queue sys_fts_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_fts_queue
+    ADD CONSTRAINT sys_fts_queue_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_jmx_instance sys_jmx_instance_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_jmx_instance
+    ADD CONSTRAINT sys_jmx_instance_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_lock_config sys_lock_config_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_lock_config
+    ADD CONSTRAINT sys_lock_config_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_query_result sys_query_result_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_query_result
+    ADD CONSTRAINT sys_query_result_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_scheduled_execution sys_scheduled_execution_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_scheduled_execution
+    ADD CONSTRAINT sys_scheduled_execution_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_scheduled_task sys_scheduled_task_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_scheduled_task
+    ADD CONSTRAINT sys_scheduled_task_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_sending_attachment sys_sending_attachment_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_sending_attachment
+    ADD CONSTRAINT sys_sending_attachment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_sending_message sys_sending_message_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_sending_message
+    ADD CONSTRAINT sys_sending_message_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sys_server sys_server_pkey; Type: CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_server
+    ADD CONSTRAINT sys_server_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_cat_attr_ent_type_and_code; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_cat_attr_ent_type_and_code ON sys_category_attr USING btree (category_entity_type, code) WHERE (delete_ts IS NULL);
+
+
+--
+-- Name: idx_sales_order_customer; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sales_order_customer ON sales_order USING btree (customer_id);
+
+
+--
+-- Name: idx_sales_order_line_order; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sales_order_line_order ON sales_order_line USING btree (order_id);
+
+
+--
+-- Name: idx_sales_order_line_product; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sales_order_line_product ON sales_order_line USING btree (product_id);
+
+
+--
+-- Name: idx_sec_constraint_group; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_constraint_group ON sec_constraint USING btree (group_id);
+
+
+--
+-- Name: idx_sec_entity_log_attr_item; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_entity_log_attr_item ON sec_entity_log_attr USING btree (item_id);
+
+
+--
+-- Name: idx_sec_entity_log_entity_id; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_entity_log_entity_id ON sec_entity_log USING btree (entity_id);
+
+
+--
+-- Name: idx_sec_filter_component_user; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_filter_component_user ON sec_filter USING btree (component, user_id);
+
+
+--
+-- Name: idx_sec_group_uniq_name; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sec_group_uniq_name ON sec_group USING btree (name) WHERE (delete_ts IS NULL);
+
+
+--
+-- Name: idx_sec_logged_attr_entity; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_logged_attr_entity ON sec_logged_attr USING btree (entity_id);
+
+
+--
+-- Name: idx_sec_permission_unique; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sec_permission_unique ON sec_permission USING btree (role_id, permission_type, target) WHERE (delete_ts IS NULL);
+
+
+--
+-- Name: idx_sec_presentation_component_user; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_presentation_component_user ON sec_presentation USING btree (component, user_id);
+
+
+--
+-- Name: idx_sec_remember_me_token; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_remember_me_token ON sec_remember_me USING btree (token);
+
+
+--
+-- Name: idx_sec_remember_me_user; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_remember_me_user ON sec_remember_me USING btree (user_id);
+
+
+--
+-- Name: idx_sec_role_uniq_name; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sec_role_uniq_name ON sec_role USING btree (name) WHERE (delete_ts IS NULL);
+
+
+--
+-- Name: idx_sec_screen_hist_sub_user; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_screen_hist_sub_user ON sec_screen_history USING btree (substituted_user_id);
+
+
+--
+-- Name: idx_sec_screen_history_user; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_screen_history_user ON sec_screen_history USING btree (user_id);
+
+
+--
+-- Name: idx_sec_search_folder_user; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_search_folder_user ON sec_search_folder USING btree (user_id);
+
+
+--
+-- Name: idx_sec_session_attr_group; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_session_attr_group ON sec_session_attr USING btree (group_id);
+
+
+--
+-- Name: idx_sec_user_role_uniq_role; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sec_user_role_uniq_role ON sec_user_role USING btree (user_id, role_id) WHERE (delete_ts IS NULL);
+
+
+--
+-- Name: idx_sec_user_substitution_user; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sec_user_substitution_user ON sec_user_substitution USING btree (user_id);
+
+
+--
+-- Name: idx_sec_user_uniq_login; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sec_user_uniq_login ON sec_user USING btree (login_lc) WHERE (delete_ts IS NULL);
+
+
+--
+-- Name: idx_sys_attr_value_entity; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_attr_value_entity ON sys_attr_value USING btree (entity_id);
+
+
+--
+-- Name: idx_sys_category_attr_category; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_category_attr_category ON sys_category_attr USING btree (category_id);
+
+
+--
+-- Name: idx_sys_category_uniq_name_entity_type; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sys_category_uniq_name_entity_type ON sys_category USING btree (name, entity_type) WHERE (delete_ts IS NULL);
+
+
+--
+-- Name: idx_sys_config_uniq_name; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sys_config_uniq_name ON sys_config USING btree (name);
+
+
+--
+-- Name: idx_sys_entity_snapshot_entity_id; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_entity_snapshot_entity_id ON sys_entity_snapshot USING btree (entity_id);
+
+
+--
+-- Name: idx_sys_entity_statistics_uniq_name; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sys_entity_statistics_uniq_name ON sys_entity_statistics USING btree (name);
+
+
+--
+-- Name: idx_sys_fts_queue_idxhost_crts; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_fts_queue_idxhost_crts ON sys_fts_queue USING btree (indexing_host, create_ts);
+
+
+--
+-- Name: idx_sys_query_result_entity_session_key; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_query_result_entity_session_key ON sys_query_result USING btree (entity_id, session_id, query_key);
+
+
+--
+-- Name: idx_sys_query_result_ientity_session_key; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_query_result_ientity_session_key ON sys_query_result USING btree (int_entity_id, session_id, query_key);
+
+
+--
+-- Name: idx_sys_query_result_lentity_session_key; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_query_result_lentity_session_key ON sys_query_result USING btree (long_entity_id, session_id, query_key);
+
+
+--
+-- Name: idx_sys_query_result_sentity_session_key; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_query_result_sentity_session_key ON sys_query_result USING btree (string_entity_id, session_id, query_key);
+
+
+--
+-- Name: idx_sys_query_result_session_key; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_query_result_session_key ON sys_query_result USING btree (session_id, query_key);
+
+
+--
+-- Name: idx_sys_scheduled_execution_task_finish_time; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_scheduled_execution_task_finish_time ON sys_scheduled_execution USING btree (task_id, finish_time);
+
+
+--
+-- Name: idx_sys_scheduled_execution_task_start_time; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_scheduled_execution_task_start_time ON sys_scheduled_execution USING btree (task_id, start_time);
+
+
+--
+-- Name: idx_sys_sending_message_date_sent; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_sending_message_date_sent ON sys_sending_message USING btree (date_sent);
+
+
+--
+-- Name: idx_sys_sending_message_status; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_sending_message_status ON sys_sending_message USING btree (status);
+
+
+--
+-- Name: idx_sys_sending_message_update_ts; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX idx_sys_sending_message_update_ts ON sys_sending_message USING btree (update_ts);
+
+
+--
+-- Name: idx_sys_server_uniq_name; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE UNIQUE INDEX idx_sys_server_uniq_name ON sys_server USING btree (name);
+
+
+--
+-- Name: sys_sending_attachment_message_idx; Type: INDEX; Schema: public; Owner: cuba
+--
+
+CREATE INDEX sys_sending_attachment_message_idx ON sys_sending_attachment USING btree (message_id);
+
+
+--
+-- Name: sales_order fk_sales_order_customer; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sales_order
+    ADD CONSTRAINT fk_sales_order_customer FOREIGN KEY (customer_id) REFERENCES sales_customer(id);
+
+
+--
+-- Name: sales_order_line fk_sales_order_line_order; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sales_order_line
+    ADD CONSTRAINT fk_sales_order_line_order FOREIGN KEY (order_id) REFERENCES sales_order(id);
+
+
+--
+-- Name: sales_order_line fk_sales_order_line_product; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sales_order_line
+    ADD CONSTRAINT fk_sales_order_line_product FOREIGN KEY (product_id) REFERENCES sales_product(id);
+
+
+--
+-- Name: sec_entity_log_attr fk_sec_entity_log_attr_item; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_entity_log_attr
+    ADD CONSTRAINT fk_sec_entity_log_attr_item FOREIGN KEY (item_id) REFERENCES sec_entity_log(id);
+
+
+--
+-- Name: sec_entity_log fk_sec_entity_log_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_entity_log
+    ADD CONSTRAINT fk_sec_entity_log_user FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_filter fk_sec_filter_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_filter
+    ADD CONSTRAINT fk_sec_filter_user FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_screen_history fk_sec_history_substituted_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_screen_history
+    ADD CONSTRAINT fk_sec_history_substituted_user FOREIGN KEY (substituted_user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_screen_history fk_sec_history_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_screen_history
+    ADD CONSTRAINT fk_sec_history_user FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_logged_attr fk_sec_logged_attr_entity; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_logged_attr
+    ADD CONSTRAINT fk_sec_logged_attr_entity FOREIGN KEY (entity_id) REFERENCES sec_logged_entity(id);
+
+
+--
+-- Name: sec_remember_me fk_sec_remember_me_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_remember_me
+    ADD CONSTRAINT fk_sec_remember_me_user FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_search_folder fk_sec_search_folder_folder; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_search_folder
+    ADD CONSTRAINT fk_sec_search_folder_folder FOREIGN KEY (folder_id) REFERENCES sys_folder(id);
+
+
+--
+-- Name: sec_search_folder fk_sec_search_folder_presentation; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_search_folder
+    ADD CONSTRAINT fk_sec_search_folder_presentation FOREIGN KEY (presentation_id) REFERENCES sec_presentation(id) ON DELETE SET NULL;
+
+
+--
+-- Name: sec_search_folder fk_sec_search_folder_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_search_folder
+    ADD CONSTRAINT fk_sec_search_folder_user FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_user_substitution fk_sec_user_substitution_substituted_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_substitution
+    ADD CONSTRAINT fk_sec_user_substitution_substituted_user FOREIGN KEY (substituted_user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_user_substitution fk_sec_user_substitution_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_substitution
+    ADD CONSTRAINT fk_sec_user_substitution_user FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sys_app_folder fk_sys_app_folder_folder; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_app_folder
+    ADD CONSTRAINT fk_sys_app_folder_folder FOREIGN KEY (folder_id) REFERENCES sys_folder(id);
+
+
+--
+-- Name: sys_entity_snapshot fk_sys_entity_snapshot_author_id; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_entity_snapshot
+    ADD CONSTRAINT fk_sys_entity_snapshot_author_id FOREIGN KEY (author_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sys_folder fk_sys_folder_parent; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_folder
+    ADD CONSTRAINT fk_sys_folder_parent FOREIGN KEY (parent_id) REFERENCES sys_folder(id);
+
+
+--
+-- Name: sys_sending_attachment fk_sys_sending_attachment_content_file; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_sending_attachment
+    ADD CONSTRAINT fk_sys_sending_attachment_content_file FOREIGN KEY (content_file_id) REFERENCES sys_file(id);
+
+
+--
+-- Name: sys_sending_attachment fk_sys_sending_attachment_sending_message; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_sending_attachment
+    ADD CONSTRAINT fk_sys_sending_attachment_sending_message FOREIGN KEY (message_id) REFERENCES sys_sending_message(id);
+
+
+--
+-- Name: sys_sending_message fk_sys_sending_message_content_file; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_sending_message
+    ADD CONSTRAINT fk_sys_sending_message_content_file FOREIGN KEY (content_text_file_id) REFERENCES sys_file(id);
+
+
+--
+-- Name: sec_constraint sec_constraint_group; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_constraint
+    ADD CONSTRAINT sec_constraint_group FOREIGN KEY (group_id) REFERENCES sec_group(id);
+
+
+--
+-- Name: sec_group_hierarchy sec_group_hierarchy_group; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_group_hierarchy
+    ADD CONSTRAINT sec_group_hierarchy_group FOREIGN KEY (group_id) REFERENCES sec_group(id);
+
+
+--
+-- Name: sec_group_hierarchy sec_group_hierarchy_parent; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_group_hierarchy
+    ADD CONSTRAINT sec_group_hierarchy_parent FOREIGN KEY (parent_id) REFERENCES sec_group(id);
+
+
+--
+-- Name: sec_group sec_group_parent; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_group
+    ADD CONSTRAINT sec_group_parent FOREIGN KEY (parent_id) REFERENCES sec_group(id);
+
+
+--
+-- Name: sec_permission sec_permission_role; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_permission
+    ADD CONSTRAINT sec_permission_role FOREIGN KEY (role_id) REFERENCES sec_role(id);
+
+
+--
+-- Name: sec_presentation sec_presentation_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_presentation
+    ADD CONSTRAINT sec_presentation_user FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_session_attr sec_session_attr_group; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_session_attr
+    ADD CONSTRAINT sec_session_attr_group FOREIGN KEY (group_id) REFERENCES sec_group(id);
+
+
+--
+-- Name: sec_user sec_user_group; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user
+    ADD CONSTRAINT sec_user_group FOREIGN KEY (group_id) REFERENCES sec_group(id);
+
+
+--
+-- Name: sec_user_role sec_user_role_profile; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_role
+    ADD CONSTRAINT sec_user_role_profile FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sec_user_role sec_user_role_role; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_role
+    ADD CONSTRAINT sec_user_role_role FOREIGN KEY (role_id) REFERENCES sec_role(id);
+
+
+--
+-- Name: sec_user_setting sec_user_setting_user; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sec_user_setting
+    ADD CONSTRAINT sec_user_setting_user FOREIGN KEY (user_id) REFERENCES sec_user(id);
+
+
+--
+-- Name: sys_attr_value sys_attr_value_category_attr_id; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_attr_value
+    ADD CONSTRAINT sys_attr_value_category_attr_id FOREIGN KEY (category_attr_id) REFERENCES sys_category_attr(id);
+
+
+--
+-- Name: sys_category_attr sys_category_attr_category_id; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_category_attr
+    ADD CONSTRAINT sys_category_attr_category_id FOREIGN KEY (category_id) REFERENCES sys_category(id);
+
+
+--
+-- Name: sys_scheduled_execution sys_scheduled_execution_task; Type: FK CONSTRAINT; Schema: public; Owner: cuba
+--
+
+ALTER TABLE ONLY sys_scheduled_execution
+    ADD CONSTRAINT sys_scheduled_execution_task FOREIGN KEY (task_id) REFERENCES sys_scheduled_task(id);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
