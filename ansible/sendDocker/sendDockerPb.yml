@@ -12,7 +12,7 @@
       copy: src={{ docker_build_path }}/{{docker_image_name}}.tar dest=/images/{{docker_image_name}}.tar owner=root mode=0660
 
     - name: finding existing containers
-      shell: docker ps -q -f="label=simplechat"
+      shell: docker ps -q -f="label={{docker_label_name }}"
       register: proc_exist
 
     - name: stop old image
