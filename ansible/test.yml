@@ -1,0 +1,25 @@
+- hosts: all
+  become: yes
+  become_user: root
+  remote_user: vagrant
+
+  tasks:
+    - name: shell test
+      shell: docker images -q --filter="label=simplchat"
+      register: result
+
+
+
+    - name: print result
+      shell: echo "result" 
+      when: result.stdout != ""
+
+
+
+  # tasks:
+  #   - command: /bin/true
+  #     register: result
+  #     ignore_errors: True
+
+  #   - command: /bin/ls
+  #     when: result|failed

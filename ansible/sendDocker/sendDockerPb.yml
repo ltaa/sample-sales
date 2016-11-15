@@ -1,0 +1,39 @@
+- hosts: all
+  # become: yes
+  # become_user: root
+  remote_user: vagrant
+
+  tasks:
+    - name: images directory create
+      command: mkdir /images
+      ignore_errors: yes
+
+    - name: send docker image
+      copy: src={{ docker_build_path }}/{{docker_image_name}}.tar dest=/images/{{docker_image_name}}.tar owner=root mode=0660
+
+    - name: finding existing containers
+      shell: docker ps -q -f="label=simplechat"
+      register: proc_exist
+
+    - name: stop old image
+      shell: docker stop $(docker ps -q -f="label={{ docker_label_name }}")
+      when: proc_exist.stdout != ""
+
+    - name: remove
+      shell: docker rm $(docker ps -a -q -f="label={{ docker_label_name}}")
+      ignore_errors: true
+
+    - name: test existing image
+      shell: docker images -q --filter="label={{docker_label_name}}"
+      register: image_exist
+
+    - name: remove old image
+      command: docker rmi {{ image_repo_name }}
+      when: image_exist.stdout != ""
+
+    
+    - name: adding new image
+      command: docker load -i /images/{{docker_label_name}}.tar
+
+    - name: run new image
+      command: docker run -d {{ image_repo_name }}
