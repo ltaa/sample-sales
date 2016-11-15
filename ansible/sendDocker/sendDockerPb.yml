@@ -36,4 +36,4 @@
       command: docker load -i /images/{{docker_label_name}}.tar
 
     - name: run new image
-      command: docker run -d {{ image_repo_name }}
+      command: docker run {{ image_repo_name }} {{ docker_run_args }}
