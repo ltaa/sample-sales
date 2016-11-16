@@ -5,11 +5,14 @@
 
   tasks:
     - name: images directory create
-      command: mkdir ~/images
+      command: mkdir -p ~/images/{{docker_image_name}}
       ignore_errors: yes
 
-    - name: send docker image
-      copy: src={{ docker_build_path }}/{{docker_image_name}}.tar dest=~/images/{{docker_image_name}}.tar owner=root mode=0660
+#    - name: send docker image
+#      copy: src={{ docker_build_path }}/{{docker_image_name}}.tar dest=~/images/{{docker_image_name}}.tar owner=teamcity mode=0644
+
+    - name: build docker image
+      command: docker build -t --label {{docker_label_name}} {{ docker_image_name }} ~/images/{{docker_image_name}}
 
     - name: finding existing containers
       shell: docker ps -q -f="label={{docker_label_name }}"
@@ -32,8 +35,11 @@
       when: image_exist.stdout != ""
 
     
-    - name: adding new image
-      command: docker load -i ~/images/{{docker_label_name}}.tar
+#    - name: adding new image
+#      command: docker load -i ~/images/{{docker_label_name}}.tar
+
+    - name: build docker image
+      command: docker build -t --label {{docker_label_name}} {{ docker_image_name }} ~/images/{{docker_image_name}}
 
     - name: run new image
       command: docker run {{ docker_run_args }} {{ image_repo_name }}
