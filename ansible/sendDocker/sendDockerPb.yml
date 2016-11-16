@@ -1,15 +1,15 @@
 - hosts: all
   # become: yes
   # become_user: root
-  remote_user: vagrant
+  remote_user: teamcity
 
   tasks:
     - name: images directory create
-      command: mkdir /images
+      command: mkdir ~/images
       ignore_errors: yes
 
     - name: send docker image
-      copy: src={{ docker_build_path }}/{{docker_image_name}}.tar dest=/images/{{docker_image_name}}.tar owner=root mode=0660
+      copy: src={{ docker_build_path }}/{{docker_image_name}}.tar dest=~/images/{{docker_image_name}}.tar owner=root mode=0660
 
     - name: finding existing containers
       shell: docker ps -q -f="label={{docker_label_name }}"
@@ -33,7 +33,7 @@
 
     
     - name: adding new image
-      command: docker load -i /images/{{docker_label_name}}.tar
+      command: docker load -i ~/images/{{docker_label_name}}.tar
 
     - name: run new image
       command: docker run {{ docker_run_args }} {{ image_repo_name }}
