@@ -1,6 +1,6 @@
 - hosts: all
   # become: yes
-  # become_user: root
+#  become_user: root
   remote_user: teamcity
 
   tasks:
@@ -8,11 +8,10 @@
       command: mkdir -p ~/images/{{docker_image_name}}
       ignore_errors: yes
 
-#    - name: send docker image
-#      copy: src={{ docker_build_path }}/{{docker_image_name}}.tar dest=~/images/{{docker_image_name}}.tar owner=teamcity mode=0644
-
-    - name: build docker image
-      command: docker build -t --label {{docker_label_name}} {{ docker_image_name }} ~/images/{{docker_image_name}}
+    - name: send build data
+      copy: src={{ item }} dest=~/images/{{docker_image_name}} owner=teamcity mode=664
+      with_items:
+        - "{{docker_build_path}}"
 
     - name: finding existing containers
       shell: docker ps -q -f="label={{docker_label_name }}"
@@ -34,12 +33,9 @@
       command: docker rmi {{ image_repo_name }}
       when: image_exist.stdout != ""
 
-    
-#    - name: adding new image
-#      command: docker load -i ~/images/{{docker_label_name}}.tar
 
     - name: build docker image
-      command: docker build -t --label {{docker_label_name}} {{ docker_image_name }} ~/images/{{docker_image_name}}
+      command: docker build --label {{docker_label_name}} -t {{ docker_image_name }} ~/images/{{docker_image_name}}
 
     - name: run new image
       command: docker run {{ docker_run_args }} {{ image_repo_name }}
