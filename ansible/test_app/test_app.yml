@@ -1,0 +1,10 @@
+- hosts: all
+  remote_user: teamcity
+  tasks:
+    - wait_for: host=192.168.3.14 port=8080 delay=10 state=started
+    - action: uri url=http://192.168.3.14:8080/app return_content=yes
+      register: webpage
+    - action: fail
+      when: "'cuba' not in webpage.content"
+
+
